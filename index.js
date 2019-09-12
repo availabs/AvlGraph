@@ -7,6 +7,8 @@ import styled from "styled-components"
 
 import d3 from "./components/d3"
 
+import "./AvlGraph.css"
+
 const DEFAULT_MARGIN = { top: 20, right: 20, bottom: 20, left: 20 };
 
 const TRANSITION_SCALE = d3.scaleLinear()
@@ -67,7 +69,8 @@ export default class AvlGraph extends React.Component {
       xDomain: [],
       yDomain: [],
       groups: [],
-      transitionTime: 0.15
+      transitionTime: 0.15,
+      padding: 0.5
     }
     this.registerData = this.registerData.bind(this);
     this.onMouseEnter = this.onMouseEnter.bind(this);
@@ -116,6 +119,7 @@ export default class AvlGraph extends React.Component {
         registerData: this.registerData,
         yDomain,
         xDomain,
+        padding: this.props.padding,
         ...child.props,
         margin: this.getMargin(),
         handleInteractions: !this.props.renderInteractiveLayer,
@@ -124,6 +128,7 @@ export default class AvlGraph extends React.Component {
         onMouseLeave: this.onMouseLeave,
         transitionTime
       };
+console.log("NEW PROPS:", newProps.padding, this.props.padding)
       return React.cloneElement(child, newProps);
     });
   }
@@ -136,13 +141,18 @@ export default class AvlGraph extends React.Component {
         transitionTime
       } = this.state,
       { top, right, bottom, left } = this.getMargin(),
-      { renderInteractiveLayer } = this.props;
+      { renderInteractiveLayer, padding } = this.props;
 
     const xScale = d3.scalePoint()
       .domain(xDomain)
       .range([0, width - left - right])
-      .padding(0.5)
+      .padding(padding)
 
+    const test = d3.scaleLinear()
+      .domain([0, 0.5])
+      .range([0.5, 0])
+
+console.log("PADDING:", padding)
     return !renderInteractiveLayer ? null : (
       <g className="interactive-layer"
         style={ { transform: `translate(${ left }px, ${ top }px)` } }
@@ -151,7 +161,7 @@ export default class AvlGraph extends React.Component {
         {
           xDomain.map((x, i) =>
             <rect key={ x }
-              x={ i * xScale.step() }
+              x={ i * xScale.step() - xScale.step() * test(padding) }
               width={ xScale.step() }
               height={ Math.max(height - top - bottom, 0) }
               fill="none"
@@ -324,7 +334,8 @@ export default class AvlGraph extends React.Component {
 
     return (
       <Container ref={ comp => this.container = comp }>
-        <SVG ref={ comp => this.svg = comp }>
+        <SVG ref={ comp => this.svg = comp }
+          className="avl-graph">
 
           { this.renderChildren() }
 
@@ -355,10 +366,10 @@ const SVG = styled.svg`
 const HoverContainer = styled.div`
   position: absolute;
   pointer-events: none;
-  padding: 5px 10px;
-  background-color: #fff;
+  padding: 5px 10px 10px 10px;
   white-space: nowrap;
   border-radius: 4px;
+  box-shadow: -1px -1px 2px 0 rgba(0, 0, 0, 0.1), 3px 3px 6px 0 rgba(0, 0, 0, 0.2);
 `
 
 class HoverComp extends React.Component {
@@ -425,6 +436,7 @@ class HoverComp extends React.Component {
 
     return (
       <HoverContainer ref={ comp => this.hover = comp }
+        className="hover-comp"
         style={ {
           transition: `left ${ startTransitioning ? transitionTime : 0 }s, top ${ startTransitioning ? transitionTime : 0 }s`,
           left: `${ left }px`,

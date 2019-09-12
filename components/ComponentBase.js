@@ -2,7 +2,7 @@ import React from "react"
 
 import deepequal from "deep-equal"
 
-import { getColorRange } from "constants/color-ranges"
+import { getColorRange } from "../utils/color-ranges"
 const DEFAULT_COLORS = getColorRange(12, "Set3");
 
 let ID_COUNTER = 0;

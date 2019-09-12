@@ -14,7 +14,7 @@ export class AxisRight extends AxisBase {
       margin: { top, right, bottom, left },
       label,
       showGridLines,
-      secondary = false
+      secondary
     } = this.props;
 
     const adjustedWidth = Math.max(0, width - left - right),
@@ -62,12 +62,9 @@ console.log(yDomain, yScale.ticks(10).map(t => yScale(t)))
       .data(yDomain.length ? ["axis-right"] : [])
       .join("g")
         .attr("class", "axis axis-right")
+          .classed("secondary", secondary)
           .transition(transition)
           .call(axisRight);
-
-    group.selectAll("g.axis path.domain")
-      .attr("stroke-width", 2)
-      .attr("stroke-dasharray", secondary ? "4 4" : null)
 
     group.selectAll("text.axis-label")
       .data(yDomain.length && Boolean(label) ? [label] : [])
@@ -86,14 +83,14 @@ console.log(yDomain, yScale.ticks(10).map(t => yScale(t)))
         .attr("class", "grid-line")
         .attr("x1", 0)
         .attr("x2", -adjustedWidth)
-        .attr("y1", oldDomain.length ? yScale(yDomain[1] * 1.5) : yScale)
-        .attr("y2", oldDomain.length ? yScale(yDomain[1] * 1.5) : yScale)
+        .attr("y1", oldDomain.length ? yScale(yDomain[1] * 1.5) : d => yScale(d) + 0.5)
+        .attr("y2", oldDomain.length ? yScale(yDomain[1] * 1.5) : d => yScale(d) + 0.5)
         .attr("stroke", "#000")
         .attr("stroke-opacity", 0.25)
         .merge(gridLines)
           .transition(transition)
-            .attr("y1", yScale)
-            .attr("y2", yScale)
+            .attr("y1", d => yScale(d) + 0.5)
+            .attr("y2", d => yScale(d) + 0.5)
     if (yDomain.length) {
       gridLines.exit()
         .transition(transition)

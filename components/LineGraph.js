@@ -6,11 +6,12 @@ import DataManager from "./DataManager"
 import get from "lodash.get"
 import deepequal from "deep-equal"
 import styled from "styled-components"
+import classnames from "classnames"
 
 import d3 from "./d3"
 
 const HoverComp = ({ data, idFormat, xFormat, yFormat, secondary }) =>
-  <table className="table table-sm">
+  <table className={ classnames("hover-table", { secondary }) }>
     <thead>
       <tr><th colSpan="3">{ xFormat(data.x) }</th></tr>
     </thead>
@@ -20,13 +21,12 @@ const HoverComp = ({ data, idFormat, xFormat, yFormat, secondary }) =>
           .map(id =>
             <tr key={ id }>
               <td>
-                <div style={ {
-                  width: "14px",
-                  height: "14px",
-                  background:
-                    secondary ? `repeating-linear-gradient(90deg, ${ data.colors[id] }, ${ data.colors[id] } 2px, #fff 2px, #fff 4px)`
-                    : data.colors[id]
-                } }/>
+                <div className="color-square"
+                  style={ {
+                    width: "14px",
+                    height: "14px",
+                    color: data.colors[id]
+                  } }/>
               </td>
               <td>{ idFormat(id) }</td>
               <td>{ yFormat(data.data[id]) }</td>
@@ -47,7 +47,8 @@ class LineGraphBase extends ComponentBase {
     HoverComp,
     keys: [],
     getDomainX,
-    getDomainY
+    getDomainY,
+    plotPoints: false
   })
   static getDerivedStateFromProps(props, state) {
     const { id } = state;
@@ -61,7 +62,9 @@ class LineGraphBase extends ComponentBase {
       yDomain,
       xDomain,
       registerData,
-      secondary = false
+      secondary,
+      padding,
+      plotPoints
     } = props;
 
     const {
@@ -78,7 +81,7 @@ class LineGraphBase extends ComponentBase {
     const xScale = d3.scalePoint()
         .domain(xDomain)
         .range([0, adjustedWidth])
-        .padding(0.5);
+        .padding(padding);
 
 		const yScale = d3.scaleLinear()
 			.domain(yDomain)
@@ -97,19 +100,32 @@ class LineGraphBase extends ComponentBase {
     const exitingData = state.lineData.filter(({ id }) => (id in exiting))
       .map(d => ({ ...d, state: "exiting" }));
 
+    const exitingPoints = state.pointsData.filter(({ id }) => (id in exiting))
+      .map(d => ({ ...d, state: "exiting" }));
+
     const getColor = getColorFunc(props);
 
     const sliceData = xDomain.reduce((a, c) => (a[c] = { x: c, data: {}, colors: {} }, a), {});
 
+    const pointsData = [];
+
     const lineData = data.map((d, i) => {
+      const color = getColor(d, i);
       d.data.forEach(dd => {
+        plotPoints && pointsData.push({
+          cx: xScale(dd.x),
+          cy: yScale(dd.y),
+          id: d.id,
+          enter: yScale(yDomain[0]),
+          color
+        });
         sliceData[dd.x].data[d.id] = dd.y;
-        sliceData[dd.x].colors[d.id] = getColor(d, i);
+        sliceData[dd.x].colors[d.id] = color;
       })
       const data = {
         id: d.id,
         d: lineGenerator(d.data),
-        color: getColor(d, i),
+        color,
         enterPath,
         secondary
       }
@@ -118,7 +134,7 @@ class LineGraphBase extends ComponentBase {
 
     registerData(id, sliceData, "line-graph", props);
 
-    return { lineData: [...lineData, ...exitingData], sliceData };
+    return { lineData: [...lineData, ...exitingData], sliceData, pointsData: [...pointsData, ...exitingPoints] };
   }
   constructor(props) {
     super(props);
@@ -127,6 +143,7 @@ class LineGraphBase extends ComponentBase {
       id: getUniqueId(),
       lineData: [],
       sliceData: {},
+      pointsData: [],
       xpos: 0,
       showHoverComp: false
     };
@@ -153,14 +170,15 @@ class LineGraphBase extends ComponentBase {
         xDomain,
         margin: { top, right, bottom, left },
         height,
-        width
+        width,
+        padding
       } = this.props,
       adjustedWidth = width - left - right,
       adjustedHeight = height - top - bottom,
       xScale = d3.scalePoint()
         .domain(xDomain)
         .range([0, adjustedWidth])
-        .padding(0.5);
+        .padding(padding);
     const {
       showHoverComp,
       sliceData
@@ -198,6 +216,7 @@ class LineGraphBase extends ComponentBase {
         {
           this.state.lineData.map(d => <Line key={ d.id } { ...d }/>)
         }
+        { this.state.pointsData.map(p => <Point key={ `${ p.id }-${ p.cx }` } { ...p }/>) }
         { this.renderInteractiveLayer() }
       </g>
     )
@@ -205,6 +224,39 @@ class LineGraphBase extends ComponentBase {
 }
 export const LineGraph = DataManager(LineGraphBase, "id");
 // export const BarGraph = BarGraphBase;
+
+class Point extends React.PureComponent {
+  ref = React.createRef()
+  componentDidMount() {
+    const { cx, cy, color, enter } = this.props;
+    d3.select(this.ref.current)
+      .attr("cx", cx)
+      .attr("cy", enter)
+      .attr("r", 0)
+      .attr("fill", color)
+      .transition().duration(1000)
+      .attr("cy", cy)
+      .attr("r", 4);
+  }
+  componentDidUpdate() {
+    const { cx, cy, color, state, enter } = this.props;
+    if (state === "exiting") {
+      d3.select(this.ref.current)
+        .transition().duration(1000)
+        .attr("r", 0)
+        .attr("cy", enter);
+    }
+    else {
+      d3.select(this.ref.current)
+        .transition().duration(1000)
+        .attr("fill", color)
+        .attr("cy", cy);
+    }
+  }
+  render() {
+    return <circle ref={ this.ref }/>
+  }
+}
 
 class Line extends React.PureComponent {
   ref = React.createRef()
@@ -214,8 +266,7 @@ class Line extends React.PureComponent {
       .attr("d", enterPath)
       .transition().duration(1000)
       .attr("d", d)
-      .attr("stroke", color)
-      .attr("stroke-dasharray", secondary ? "4 4" : null)
+      .attr("stroke", color);
   }
   componentDidUpdate() {
     const { d, color, state, enterPath, secondary } = this.props;
@@ -228,18 +279,18 @@ class Line extends React.PureComponent {
       d3.select(this.ref.current)
         .transition().duration(1000)
         .attr("d", d)
-        .attr("stroke", color)
-        .attr("stroke-dasharray", secondary ? "4 4" : null);
+        .attr("stroke", color);
     }
   }
   render() {
     const {
       d,
-      color
+      color,
+      secondary
     } = this.props;
     return (
       <path ref={ this.ref }
-        className="graph-line"
+        className={ classnames("graph-line", { secondary }) }
         fill="none"
         strokeWidth="2"/>
     )

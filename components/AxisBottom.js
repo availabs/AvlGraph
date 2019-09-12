@@ -12,7 +12,9 @@ export class AxisBottom extends AxisBase {
       height,
       margin: { top, right, bottom, left },
       xFormat,
-      label
+      label,
+      padding,
+      secondary
     } = this.props;
 
     const adjustedWidth = Math.max(0, width - left - right),
@@ -21,7 +23,7 @@ export class AxisBottom extends AxisBase {
     const xScale = d3.scalePoint()
       .domain(xDomain)
       .range([0, adjustedWidth])
-      .padding(0.5);
+      .padding(padding);
 
     const axisBottom = d3.axisBottom(xScale)
       .tickValues(this.getTickValues())
@@ -93,11 +95,9 @@ export class AxisBottom extends AxisBase {
       .data(xDomain.length ? ["axis-bottom"] : [])
         .join("g")
           .attr("class", "axis axis-bottom")
+          .classed("secondary", secondary)
           .transition().duration(1000)
           .call(axisBottom);
-
-    group.selectAll("g.axis path.domain")
-      .attr("stroke-width", 2)
 
     group.selectAll("text.axis-label")
       .data(xDomain.length && Boolean(label) ? [label] : [])
