@@ -1,6 +1,7 @@
 :root {
   --graph-bg-color: #ffffff;
 }
+
 /* GRAPH STUFF */
 .avl-graph {
   background-color: var(--graph-bg-color);
