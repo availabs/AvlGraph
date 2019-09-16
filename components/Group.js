@@ -53,7 +53,8 @@ export class Group extends React.Component {
       onMouseEnter,
       onMouseMove,
       onMouseLeave,
-      registerData
+      registerData,
+      padding
     } = this.props;
 
     if ((width === 0) || (height === 0)) return null;
@@ -67,6 +68,7 @@ export class Group extends React.Component {
         height,
         yDomain,
         xDomain,
+        padding,
         ...child.props,
         margin,
         handleInteractions,

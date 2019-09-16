@@ -68,7 +68,7 @@ export class AxisLeft extends AxisBase {
       .data(yDomain.length && Boolean(label) ? [label] : [])
       .join("text")
         .attr("class", "axis-label axis-label-left")
-        .style("transform", `translate(${ -left + 11 }px, ${ adjustedHeight * 0.5 }px) rotate(-90deg)`)
+        .style("transform", `translate(${ -left + 16 }px, ${ adjustedHeight * 0.5 }px) rotate(-90deg)`)
         .attr("text-anchor", "middle")
 				.attr("fill", "#000")
         .attr("font-size", "1rem")

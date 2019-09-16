@@ -23,7 +23,8 @@ export default class AvlGraph extends React.Component {
     xFormat: x => x,
     yFormat: y => y,
     idFormat: id => id,
-    renderInteractiveLayer: false
+    renderInteractiveLayer: false,
+    padding: 0.5
   }
 
   static getDerivedStateFromProps = (props, state) => {
@@ -69,8 +70,7 @@ export default class AvlGraph extends React.Component {
       xDomain: [],
       yDomain: [],
       groups: [],
-      transitionTime: 0.15,
-      padding: 0.5
+      transitionTime: 0.15
     }
     this.registerData = this.registerData.bind(this);
     this.onMouseEnter = this.onMouseEnter.bind(this);
@@ -128,7 +128,6 @@ export default class AvlGraph extends React.Component {
         onMouseLeave: this.onMouseLeave,
         transitionTime
       };
-console.log("NEW PROPS:", newProps.padding, this.props.padding)
       return React.cloneElement(child, newProps);
     });
   }
@@ -152,7 +151,6 @@ console.log("NEW PROPS:", newProps.padding, this.props.padding)
       .domain([0, 0.5])
       .range([0.5, 0])
 
-console.log("PADDING:", padding)
     return !renderInteractiveLayer ? null : (
       <g className="interactive-layer"
         style={ { transform: `translate(${ left }px, ${ top }px)` } }

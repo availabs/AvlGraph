@@ -103,7 +103,7 @@ export class AxisBottom extends AxisBase {
       .data(xDomain.length && Boolean(label) ? [label] : [])
         .join("text")
           .attr("class", "axis-label axis-label-bottom")
-          .style("transform", `translate(${ adjustedWidth * 0.5 }px, ${ bottom - 11 }px)`)
+          .style("transform", `translate(${ adjustedWidth * 0.5 }px, ${ bottom - 5 }px)`)
           .attr("text-anchor", "middle")
 					.attr("fill", "#000")
           .attr("font-size", "1rem")
