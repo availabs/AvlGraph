@@ -4,8 +4,8 @@ import ComponentBase, { getColorFunc, getUniqueId } from "./ComponentBase"
 import DataManager from "./DataManager"
 
 import get from "lodash.get"
-import deepequal from "deep-equal"
-import styled from "styled-components"
+// import deepequal from "deep-equal"
+// import styled from "styled-components"
 import classnames from "classnames"
 
 import d3 from "./d3"
@@ -58,7 +58,7 @@ class LineGraphBase extends ComponentBase {
       width,
       height,
       margin: { top, right, bottom, left },
-      keys,
+      // keys,
       yDomain,
       xDomain,
       registerData,
@@ -68,8 +68,8 @@ class LineGraphBase extends ComponentBase {
     } = props;
 
     const {
-      entering,
-      updating,
+      // entering,
+      // updating,
       exiting
     } = props;
 
@@ -209,7 +209,7 @@ class LineGraphBase extends ComponentBase {
     );
   }
   render() {
-    const { margin: { top, right, bottom, left } } = this.props;
+    const { margin: { top, left } } = this.props;
 
     return (
       <g style={ { transform: `translate(${ left }px, ${ top }px)` } }>
@@ -239,7 +239,7 @@ class Point extends React.PureComponent {
       .attr("r", 4);
   }
   componentDidUpdate() {
-    const { cx, cy, color, state, enter } = this.props;
+    const { cy, color, state, enter } = this.props;
     if (state === "exiting") {
       d3.select(this.ref.current)
         .transition().duration(1000)
@@ -261,7 +261,7 @@ class Point extends React.PureComponent {
 class Line extends React.PureComponent {
   ref = React.createRef()
   componentDidMount() {
-    const { d, color, enterPath, secondary } = this.props;
+    const { d, color, enterPath } = this.props;
     d3.select(this.ref.current)
       .attr("d", enterPath)
       .transition().duration(1000)
@@ -269,7 +269,7 @@ class Line extends React.PureComponent {
       .attr("stroke", color);
   }
   componentDidUpdate() {
-    const { d, color, state, enterPath, secondary } = this.props;
+    const { d, color, state, enterPath } = this.props;
     if (state === "exiting") {
       d3.select(this.ref.current)
         .transition().duration(1000)
@@ -284,8 +284,8 @@ class Line extends React.PureComponent {
   }
   render() {
     const {
-      d,
-      color,
+      // d,
+      // color,
       secondary
     } = this.props;
     return (

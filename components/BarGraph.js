@@ -5,7 +5,6 @@ import DataManager from "./DataManager"
 
 import get from "lodash.get"
 import deepequal from "deep-equal"
-import styled from "styled-components"
 
 import d3 from "./d3"
 
@@ -64,8 +63,8 @@ class BarGraphBase extends ComponentBase {
     } = props;
 
     const {
-      entering,
-      updating,
+      // entering,
+      // updating,
       exiting
     } = props;
 
@@ -154,7 +153,7 @@ class BarGraphBase extends ComponentBase {
   render() {
     const {
       height,
-      margin: { top, right, bottom, left },
+      margin: { top, bottom, left },
       handleInteractions,
       onMouseLeave
     } = this.props;
