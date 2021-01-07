@@ -67,6 +67,7 @@ export default (WrappedComponent, dataKey = "x") => {
       });
     }
     render() {
+// console.log("PROPS:", this.props)
       return <WrappedComponent { ...this.state } { ...this.props }/>
     }
   }

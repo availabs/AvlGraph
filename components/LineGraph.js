@@ -134,24 +134,22 @@ class LineGraphBase extends ComponentBase {
 
     registerData(id, sliceData, "line-graph", props);
 
-    return { lineData: [...lineData, ...exitingData], sliceData, pointsData: [...pointsData, ...exitingPoints] };
-  }
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      id: getUniqueId(),
-      lineData: [],
-      sliceData: {},
-      pointsData: [],
-      xpos: 0,
-      showHoverComp: false
+    return {
+      lineData: [...lineData, ...exitingData],
+      pointsData: [...pointsData, ...exitingPoints],
+      sliceData
     };
-
-    this.onMouseEnter = this.onMouseEnter.bind(this);
-    this.onMouseMove = this.onMouseMove.bind(this);
-    this.onMouseLeave = this.onMouseLeave.bind(this);
   }
+
+  state = {
+    id: getUniqueId(),
+    lineData: [],
+    sliceData: {},
+    pointsData: [],
+    xpos: 0,
+    showHoverComp: false
+  }
+
   onMouseEnter(e, x, xpos, data) {
     this.setState({ showHoverComp: true, xpos });
     this.props.onMouseEnter(e, x, xpos, this.props.id, data);
@@ -165,15 +163,15 @@ class LineGraphBase extends ComponentBase {
   }
   renderInteractiveLayer() {
     const {
-        handleInteractions,
         transitionTime,
         xDomain,
         margin: { top, right, bottom, left },
         height,
         width,
         padding
-      } = this.props,
-      adjustedWidth = width - left - right,
+      } = this.props;
+
+    const adjustedWidth = width - left - right,
       adjustedHeight = height - top - bottom,
       xScale = d3.scalePoint()
         .domain(xDomain)
@@ -184,15 +182,15 @@ class LineGraphBase extends ComponentBase {
       sliceData
     } = this.state;
     return (
-      <g onMouseLeave={ handleInteractions ? this.onMouseLeave : null }>
+      <g onMouseLeave={ e => this.onMouseLeave(e) }>
         { xDomain.map((x, i) =>
             <rect key={ x }
               height={ adjustedHeight }
               width={ xScale.step() }
               x={ i * xScale.step() }
               fill="transparent"
-              onMouseEnter={ handleInteractions ? e => this.onMouseEnter(e, x, xScale(x), sliceData[x]) : null }
-              onMouseMove={ handleInteractions ? e => this.onMouseMove(e, x, xScale(x), sliceData[x]) : null }/>
+              onMouseEnter={ e => this.onMouseEnter(e, x, xScale(x), sliceData[x]) }
+              onMouseMove={ e => this.onMouseMove(e, x, xScale(x), sliceData[x]) }/>
           )
         }
         { !showHoverComp ? null :
@@ -209,21 +207,21 @@ class LineGraphBase extends ComponentBase {
     );
   }
   render() {
-    const { margin: { top, left } } = this.props;
+    const {
+      margin: { top, left },
+      handleInteractions
+    } = this.props;
 
     return (
       <g style={ { transform: `translate(${ left }px, ${ top }px)` } }>
-        {
-          this.state.lineData.map(d => <Line key={ d.id } { ...d }/>)
-        }
+        { this.state.lineData.map(d => <Line key={ d.id } { ...d }/>) }
         { this.state.pointsData.map(p => <Point key={ `${ p.id }-${ p.cx }` } { ...p }/>) }
-        { this.renderInteractiveLayer() }
+        { handleInteractions && this.renderInteractiveLayer() }
       </g>
     )
   }
 }
 export const LineGraph = DataManager(LineGraphBase, "id");
-// export const BarGraph = BarGraphBase;
 
 class Point extends React.PureComponent {
   ref = React.createRef()

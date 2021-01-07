@@ -1,11 +1,15 @@
 import React from "react"
 import ReactDOM from 'react-dom'
 
+import { Group } from "./components/Group"
+
 import deepequal from "deep-equal"
 import get from "lodash.get"
 import styled from "styled-components"
 
 import d3 from "./components/d3"
+
+import { generateDomains } from "./components/utils"
 
 import "./AvlGraph.css"
 
@@ -28,30 +32,8 @@ export default class AvlGraph extends React.Component {
   }
 
   static getDerivedStateFromProps = (props, state) => {
-    let xDomain = [],
-      childDomains = [],
-      yDomain = [];
-
-    React.Children.forEach(props.children, child => {
-      const { data, getDomainX, getDomainY, keys } = child.props,
-        xd = getDomainX(data),
-        yd = getDomainY(data, keys);
-      if (xd !== null) {
-        childDomains.push(xd);
-      }
-      if (yd !== null) {
-        const [y1, y2] = yd;
-        yDomain = [0, Math.max(y2, get(yDomain, [1], 0))]
-      }
-    })
-    xDomain = childDomains.reduce((a, c) => {
-      return a.length > c.length ? a : a.length < c.length ? c : a;
-    }, []);
-
-    const {
-      width,
-      height
-    } = state;
+    const { xDomain, yDomain } = generateDomains(props, state),
+      { width } = state;
 
     const transitionTime = TRANSITION_SCALE(width / xDomain.length);
 
@@ -110,26 +92,28 @@ export default class AvlGraph extends React.Component {
     if ((width === 0) || (height === 0)) return null;
 
     return React.Children.map(this.props.children, child => {
-      const newProps = {
-        idFormat: this.props.idFormat,
-        xFormat: this.props.xFormat,
-        yFormat: this.props.yFormat,
-        width,
-        height,
-        registerData: this.registerData,
-        yDomain,
-        xDomain,
-        padding: this.props.padding,
-        ...child.props,
-        margin: this.getMargin(),
-        handleInteractions: !this.props.renderInteractiveLayer,
-        onMouseEnter: this.onMouseEnter,
-        onMouseMove: this.onMouseMove,
-        onMouseLeave: this.onMouseLeave,
-        transitionTime
-      };
-      return React.cloneElement(child, newProps);
-    });
+       const newProps = {
+         idFormat: this.props.idFormat,
+         xFormat: this.props.xFormat,
+         yFormat: this.props.yFormat,
+         width,
+         height,
+         registerData: this.registerData,
+         yDomain,
+         xDomain,
+         padding: this.props.padding,
+
+         ...child.props,
+
+         margin: this.getMargin(),
+         handleInteractions: !this.props.renderInteractiveLayer,
+         onMouseEnter: this.onMouseEnter,
+         onMouseMove: this.onMouseMove,
+         onMouseLeave: this.onMouseLeave,
+         transitionTime
+       };
+       return React.cloneElement(child, newProps);
+     })
   }
   renderInteractiveLayer() {
     const {
@@ -436,7 +420,8 @@ class HoverComp extends React.Component {
       <HoverContainer ref={ comp => this.hover = comp }
         className="hover-comp"
         style={ {
-          transition: `left ${ startTransitioning ? transitionTime : 0 }s, top ${ startTransitioning ? transitionTime : 0 }s`,
+          // transition: `left ${ startTransitioning ? transitionTime : 0 }s, top ${ startTransitioning ? transitionTime : 0 }s`,
+          transition: `left ${ transitionTime }s, top ${ transitionTime }s`,
           left: `${ left }px`,
           top: `${ top }px`
         } }>

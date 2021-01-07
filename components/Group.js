@@ -2,35 +2,14 @@ import React from "react"
 
 import get from "lodash.get"
 
+import { generateDomains } from "./utils"
+
 export class Group extends React.Component {
   static defaultProps = {
-    data: [],
     getDomainX: () => null,
     getDomainY: () => null
   }
-  static getDerivedStateFromProps = (props, state) => {
-    let xDomain = [],
-      childDomains = [],
-      yDomain = [];
-
-    React.Children.forEach(props.children, child => {
-      const { data, getDomainX, getDomainY, keys } = child.props,
-        xd = getDomainX(data),
-        yd = getDomainY(data, keys);
-      if (xd !== null) {
-        childDomains.push(xd);
-      }
-      if (yd !== null) {
-        const [y1, y2] = yd;
-        yDomain = [0, Math.max(y2, get(yDomain, [1], 0))]
-      }
-    })
-    xDomain = childDomains.reduce((a, c) => {
-      return a.length > c.length ? a : a.length < c.length ? c : a;
-    }, []);
-
-    return { xDomain, yDomain };
-  }
+  static getDerivedStateFromProps = generateDomains
 
   state = {
     xDomain: [],
@@ -54,7 +33,8 @@ export class Group extends React.Component {
       onMouseMove,
       onMouseLeave,
       registerData,
-      padding
+      padding,
+      secondary
     } = this.props;
 
     if ((width === 0) || (height === 0)) return null;
@@ -69,24 +49,26 @@ export class Group extends React.Component {
         yDomain,
         xDomain,
         padding,
+
         ...child.props,
+
+        secondary,
         margin,
         handleInteractions,
         onMouseEnter,
         onMouseMove,
         onMouseLeave,
         transitionTime,
-        registerData,
-        secondary: true
+        registerData
       };
       return React.cloneElement(child, newProps);
     });
   }
   render() {
     return (
-      <>
+      <g>
         { this.renderChildren() }
-      </>
+      </g>
     )
   }
 }
